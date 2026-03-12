@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class RowAffect extends Affect {
 
-    private final AtomicInteger rCnt = new AtomicInteger();
+    private final AtomicInteger rCnt = new AtomicInteger(); // FIXMETAHA
 
     public RowAffect() {
     }

@@ -425,7 +425,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
             SortedSet<Class<?>> classSet = classLoaderClassMap.get(classLoader);
             if (classSet == null) {
-                classSet = new TreeSet<Class<?>>(new Comparator<Class<?>>() {
+                classSet = new TreeSet<Class<?>>(new Comparator<Class<?>>() { // code inutile a revoir FIXMETAHA
                     @Override
                     public int compare(Class<?> o1, Class<?> o2) {
                         return o1.getName().compareTo(o2.getName());
@@ -437,7 +437,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         }
 
         // output bootstrapClassSet
-        int pageSize = 256;
+        int pageSize = 256; // MAGIC NUM FIXMETAHA
         processClassSet(process, ClassUtils.createClassLoaderVO(null), bootstrapClassSet, pageSize, affect);
 
         // output other classSet
@@ -504,10 +504,10 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         Map<String, UrlClassStatBuilder> statsMap = new HashMap<String, UrlClassStatBuilder>();
         Class<?>[] allLoadedClasses = inst.getAllLoadedClasses();
         for (int i = 0; i < allLoadedClasses.length; i++) {
-            if ((i & 0x3FFF) == 0 && checkInterrupted(process)) {
+            if ((i & 0x3FFF) == 0 && checkInterrupted(process)) { // MAGIC NUM FIXMETAHA
                 return;
             }
-            Class<?> clazz = allLoadedClasses[i];
+            Class<?> clazz = allLoadedClasses[i]; //FIXMETAHA
             if (clazz == null) {
                 continue;
             }

@@ -225,8 +225,17 @@ public class ObjectViewTest {
 
     @Test
     public void testDate() {
-        Date d = new Date(1531204354961L - TimeZone.getDefault().getRawOffset()
-                        + TimeZone.getTimeZone("GMT+8").getRawOffset());
+        long timestamp = 1531204354961L;
+
+        TimeZone local = TimeZone.getDefault();
+        TimeZone target = TimeZone.getTimeZone("GMT+8");
+
+        Date d = new Date(
+                timestamp
+                        - local.getOffset(timestamp)
+                        + target.getOffset(timestamp)
+        );
+        
         ObjectView objectView = new ObjectView(d, 3);
         String expected = "@Date[2018-07-10 14:32:34,961]";
         Assert.assertEquals(expected, objectView.draw());

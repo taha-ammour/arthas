@@ -208,7 +208,7 @@ public class JadCommand extends AnnotatedCommand {
                 jadModel.setLocation(ClassUtils.getCodeSource(c.getProtectionDomain().getCodeSource()));
             }
             process.appendResult(jadModel);
-            affect.rCnt(classFiles.keySet().size());
+            affect.addRowCount(classFiles.keySet().size());
             return ExitStatus.success();
         } catch (Throwable t) {
             logger.error("jad: fail to decompile class: " + c.getName(), t);

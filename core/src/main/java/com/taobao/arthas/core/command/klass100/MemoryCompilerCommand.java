@@ -147,7 +147,7 @@ public class MemoryCompilerCommand extends AnnotatedCommand {
                 File byteCodeFile = new File(outputDir, entry.getKey().replace('.', '/') + ".class");
                 FileUtils.writeByteArrayToFile(byteCodeFile, entry.getValue());
                 files.add(byteCodeFile.getAbsolutePath());
-                affect.rCnt(1);
+                affect.addRowCount(1);
             }
             process.appendResult(new MemoryCompilerModel(files));
             process.appendResult(new RowAffectModel(affect));

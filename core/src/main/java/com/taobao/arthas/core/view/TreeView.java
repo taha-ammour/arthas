@@ -55,7 +55,7 @@ public class TreeView implements View {
                 if (isPrintCost && !node.isRoot()) {
                     if (node == maxCost) {
                         // the node with max cost will be highlighted
-                        treeSB.append(highlighted.a(node.toString()).reset().toString());
+                        treeSB.append(highlighted.applyAttribute(node.toString()).reset().toString());
                     } else {
                         treeSB.append(node.toString());
                     }

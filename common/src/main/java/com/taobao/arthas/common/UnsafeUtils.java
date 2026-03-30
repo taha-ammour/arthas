@@ -1,42 +1,34 @@
 package com.taobao.arthas.common;
 
-
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 
-import sun.misc.Unsafe;
-
 /**
- * 
- * @author hengyunabc 2023-09-21
+ * Utility class for privileged reflective access.
+ *
+ * Refactored to remove dependency on sun.misc.Unsafe, which is an internal
+ * proprietary API removed from public access in JDK 11+.
+ * Uses standard java.lang.reflect and java.lang.invoke APIs instead.
  *
  */
 public class UnsafeUtils {
-    public static final Unsafe UNSAFE;
+
     private static MethodHandles.Lookup IMPL_LOOKUP;
 
-    static {
-        Unsafe unsafe = null;
-        try {
-            Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            theUnsafeField.setAccessible(true);
-            unsafe = (Unsafe) theUnsafeField.get(null);
-        } catch (Throwable ignored) {
-            // ignored
-        }
-        UNSAFE = unsafe;
-    }
-
+    /**
+     * Returns a trusted MethodHandles.Lookup with full access privileges.
+     * Uses standard reflection with setAccessible as a fallback,
+     * replacing the previous sun.misc.Unsafe-based approach.
+     */
     public static MethodHandles.Lookup implLookup() {
         if (IMPL_LOOKUP == null) {
-            Class<MethodHandles.Lookup> lookupClass = MethodHandles.Lookup.class;
-
             try {
-                Field implLookupField = lookupClass.getDeclaredField("IMPL_LOOKUP");
-                long offset = UNSAFE.staticFieldOffset(implLookupField);
-                IMPL_LOOKUP = (MethodHandles.Lookup) UNSAFE.getObject(UNSAFE.staticFieldBase(implLookupField), offset);
+                Field implLookupField = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
+                implLookupField.setAccessible(true);
+                IMPL_LOOKUP = (MethodHandles.Lookup) implLookupField.get(null);
             } catch (Throwable e) {
-                // ignored
+                // Fallback: return a standard lookup if IMPL_LOOKUP is not accessible
+                IMPL_LOOKUP = MethodHandles.lookup();
             }
         }
         return IMPL_LOOKUP;

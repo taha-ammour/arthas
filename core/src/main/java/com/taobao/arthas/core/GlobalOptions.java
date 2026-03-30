@@ -147,13 +147,22 @@ public class GlobalOptions {
         try {
             Field field = OgnlRuntime.class.getDeclaredField("_useStricterInvocation");
             field.setAccessible(true);
-            // 获取字段的内存偏移量和基址
-            Object staticFieldBase = UnsafeUtils.UNSAFE.staticFieldBase(field);
-            long staticFieldOffset = UnsafeUtils.UNSAFE.staticFieldOffset(field);
 
-            // 修改字段的值
-            UnsafeUtils.UNSAFE.putBoolean(staticFieldBase, staticFieldOffset, strict);
-        } catch (NoSuchFieldException | SecurityException e) {
+            // Access sun.misc.Unsafe via reflection (no import needed)
+            // Required because static final fields cannot be modified via standard reflection on JDK 12+
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            Object unsafe = theUnsafe.get(null);
+
+            java.lang.reflect.Method staticFieldBase = unsafeClass.getMethod("staticFieldBase", Field.class);
+            java.lang.reflect.Method staticFieldOffset = unsafeClass.getMethod("staticFieldOffset", Field.class);
+            java.lang.reflect.Method putBoolean = unsafeClass.getMethod("putBoolean", Object.class, long.class, boolean.class);
+
+            Object base = staticFieldBase.invoke(unsafe, field);
+            long offset = (long) staticFieldOffset.invoke(unsafe, field);
+            putBoolean.invoke(unsafe, base, offset, strict);
+        } catch (Exception e) {
             // ignore
         }
     }

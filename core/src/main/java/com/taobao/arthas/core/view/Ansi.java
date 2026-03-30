@@ -218,7 +218,7 @@ public class Ansi {
         }
 
         @Override
-        public Ansi a(Attribute attribute) {
+        public Ansi applyAttribute(Attribute attribute) {
             return this;
         }
 
@@ -476,7 +476,7 @@ public class Ansi {
         return this.bgBright(Color.YELLOW);
     }
 
-    public Ansi a(Attribute attribute) {
+    public Ansi applyAttribute(Attribute attribute) {
         attributeOptions.add(attribute.value());
         return this;
     }
@@ -559,90 +559,90 @@ public class Ansi {
     }
 
     public Ansi reset() {
-        return a(Attribute.RESET);
+        return applyAttribute(Attribute.RESET);
     }
 
     public Ansi bold() {
-        return a(Attribute.INTENSITY_BOLD);
+        return applyAttribute(Attribute.INTENSITY_BOLD);
     }
 
     public Ansi boldOff() {
-        return a(Attribute.INTENSITY_BOLD_OFF);
+        return applyAttribute(Attribute.INTENSITY_BOLD_OFF);
     }
 
-    public Ansi a(String value) {
+    public Ansi applyAttribute(String value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(boolean value) {
+    public Ansi applyAttribute(boolean value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(char value) {
+    public Ansi applyAttribute(char value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(char[] value, int offset, int len) {
+    public Ansi applyAttribute(char[] value, int offset, int len) {
         flushAttributes();
         builder.append(value, offset, len);
         return this;
     }
 
-    public Ansi a(char[] value) {
+    public Ansi applyAttribute(char[] value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(CharSequence value, int start, int end) {
+    public Ansi applyAttribute(CharSequence value, int start, int end) {
         flushAttributes();
         builder.append(value, start, end);
         return this;
     }
 
-    public Ansi a(CharSequence value) {
+    public Ansi applyAttribute(CharSequence value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(double value) {
+    public Ansi applyAttribute(double value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(float value) {
+    public Ansi applyAttribute(float value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(int value) {
+    public Ansi applyAttribute(int value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(long value) {
+    public Ansi applyAttribute(long value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(Object value) {
+    public Ansi applyAttribute(Object value) {
         flushAttributes();
         builder.append(value);
         return this;
     }
 
-    public Ansi a(StringBuffer value) {
+    public Ansi applyAttribute(StringBuffer value) {
         flushAttributes();
         builder.append(value);
         return this;

@@ -70,7 +70,7 @@ public class TraceView extends ResultView<TraceModel> {
             String costStr = renderCost(methodNode);
             if (node == maxCostNode) {
                 // the node with max cost will be highlighted
-                sb.append(highlighted.a(costStr).reset().toString());
+                sb.append(highlighted.applyAttribute(costStr).reset().toString());
             } else {
                 sb.append(costStr);
             }

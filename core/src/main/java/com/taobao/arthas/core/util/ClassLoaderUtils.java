@@ -127,7 +127,7 @@ public class ClassLoaderUtils {
         return matchClassLoaders;
     }
 
-    @SuppressWarnings({ "unchecked", "restriction" })
+    @SuppressWarnings("unchecked")
     public static URL[] getUrls(ClassLoader classLoader) {
         if (classLoader instanceof URLClassLoader) {
             try {
@@ -140,10 +140,6 @@ public class ClassLoaderUtils {
         // jdk9
         if (classLoader.getClass().getName().startsWith("jdk.internal.loader.ClassLoaders$")) {
             try {
-                Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-                field.setAccessible(true);
-                sun.misc.Unsafe unsafe = (sun.misc.Unsafe) field.get(null);
-
                 Class<?> ucpOwner = classLoader.getClass();
                 Field ucpField = null;
 
@@ -156,25 +152,26 @@ public class ClassLoaderUtils {
                         ucpOwner = ucpOwner.getSuperclass();
                     }
                 }
+
                 if (ucpField == null) {
                     return null;
                 }
 
-                long ucpFieldOffset = unsafe.objectFieldOffset(ucpField);
-                Object ucpObject = unsafe.getObject(classLoader, ucpFieldOffset);
+                ucpField.setAccessible(true);
+                Object ucpObject = ucpField.get(classLoader);
                 if (ucpObject == null) {
                     return null;
                 }
 
                 // jdk.internal.loader.URLClassPath.path
-                Field pathField = ucpField.getType().getDeclaredField("path");
+                Field pathField = ucpObject.getClass().getDeclaredField("path");
                 if (pathField == null) {
                     return null;
                 }
-                long pathFieldOffset = unsafe.objectFieldOffset(pathField);
-                ArrayList<URL> path = (ArrayList<URL>) unsafe.getObject(ucpObject, pathFieldOffset);
+                pathField.setAccessible(true);
+                ArrayList<URL> path = (ArrayList<URL>) pathField.get(ucpObject);
 
-                return path.toArray(new URL[path.size()]);
+                return path.toArray(new URL[0]);
             } catch (Throwable e) {
                 // ignore
                 return null;

@@ -32,7 +32,7 @@ public class Constants {
      * 带颜色命令提示符
      * raw string: "[33m$ [m"
      */
-    public static final String COLOR_PROMPT = Ansi.ansi().fg(Ansi.Color.YELLOW).a(DEFAULT_PROMPT).reset().toString();
+    public static final String COLOR_PROMPT = Ansi.ansi().fg(Ansi.Color.YELLOW).applyAttribute(DEFAULT_PROMPT).reset().toString();
 
     /**
      * 方法执行耗时

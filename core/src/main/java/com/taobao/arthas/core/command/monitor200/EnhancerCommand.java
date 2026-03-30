@@ -12,7 +12,6 @@ import com.taobao.arthas.core.advisor.AdviceListener;
 import com.taobao.arthas.core.advisor.AdviceWeaver;
 import com.taobao.arthas.core.advisor.Enhancer;
 import com.taobao.arthas.core.advisor.InvokeTraceable;
-import com.taobao.arthas.core.command.model.EnhancerModel;
 import com.taobao.arthas.core.command.model.EnhancerModelFactory;
 import com.taobao.arthas.core.server.ArthasBootstrap;
 import com.taobao.arthas.core.shell.cli.Completion;
@@ -240,12 +239,12 @@ public abstract class EnhancerCommand extends AnnotatedCommand {
                     // might be method code too large
                     process.appendResult(EnhancerModelFactory.create(effect, false, "No class or method is affected"));
 
-                    String smCommand = Ansi.ansi().fg(Ansi.Color.GREEN).a("sm CLASS_NAME METHOD_NAME").reset().toString();
-                    String optionsCommand = Ansi.ansi().fg(Ansi.Color.GREEN).a("options unsafe true").reset().toString();
-                    String javaPackage = Ansi.ansi().fg(Ansi.Color.GREEN).a("java.*").reset().toString();
-                    String resetCommand = Ansi.ansi().fg(Ansi.Color.GREEN).a("reset CLASS_NAME").reset().toString();
-                    String logStr = Ansi.ansi().fg(Ansi.Color.GREEN).a(LogUtil.loggingFile()).reset().toString();
-                    String issueStr = Ansi.ansi().fg(Ansi.Color.GREEN).a("https://github.com/alibaba/arthas/issues/47").reset().toString();
+                    String smCommand = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute("sm CLASS_NAME METHOD_NAME").reset().toString();
+                    String optionsCommand = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute("options unsafe true").reset().toString();
+                    String javaPackage = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute("java.*").reset().toString();
+                    String resetCommand = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute("reset CLASS_NAME").reset().toString();
+                    String logStr = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute(LogUtil.loggingFile()).reset().toString();
+                    String issueStr = Ansi.ansi().fg(Ansi.Color.GREEN).applyAttribute("https://github.com/alibaba/arthas/issues/47").reset().toString();
                     String msg = "No class or method is affected, try:\n"
                             + "1. Execute `" + smCommand + "` to make sure the method you are tracing actually exists (it might be in your parent class).\n"
                             + "2. Execute `" + optionsCommand + "`, if you want to enhance the classes under the `" + javaPackage + "` package.\n"

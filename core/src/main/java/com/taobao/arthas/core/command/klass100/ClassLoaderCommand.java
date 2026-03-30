@@ -61,6 +61,11 @@ import java.util.regex.Pattern;
         Constants.WIKI + Constants.WIKI_HOME + "classloader")
 public class ClassLoaderCommand extends AnnotatedCommand {
 
+
+    public static final int PAGE_SIZE = 256;
+    public static final int CODE_ERROR = -1;
+    private static final int INTERRUPT_CHECK_INTERVAL = 0x3FFF;
+
     private static Logger logger = LoggerFactory.getLogger(ClassLoaderCommand.class);
     private static final int DEFAULT_URL_CLASSES_LIMIT = 100;
     private static final String UNKNOWN_CODE_SOURCE = "<unknown>";
@@ -90,7 +95,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
     public void setTree(boolean tree) {
         isTree = tree;
     }
-    
+
     @Option(longName = "classLoaderClass")
     @Description("The class name of the special class's classLoader.")
     public void setClassLoaderClass(String classLoaderClass) {
@@ -195,14 +200,14 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
         if (!urlClasses && (urlClassesDetail || urlClassesRegEx || jarFilter != null || classFilter != null
                 || urlClassesLimit != DEFAULT_URL_CLASSES_LIMIT)) {
-            process.end(-1, "Options -d/-E/-n/--jar/--class only work with --url-classes.");
+            process.end(CODE_ERROR, "Options -d/-E/-n/--jar/--class only work with --url-classes.");
             return;
         }
-        
+
         if (hashCode != null || classLoaderClass != null) {
             classLoaderSpecified = true;
         }
-        
+
         if (hashCode != null) {
             Set<ClassLoader> allClassLoader = getAllClassLoaders(inst);
             for (ClassLoader cl : allClassLoader) {
@@ -221,21 +226,21 @@ public class ClassLoaderCommand extends AnnotatedCommand {
                         .setClassLoaderClass(classLoaderClass)
                         .setMatchedClassLoaders(classLoaderVOList);
                 process.appendResult(classloaderModel);
-                process.end(-1, "Found more than one classloader by class name, please specify classloader with '-c <classloader hash>'");
+                process.end(CODE_ERROR, "Found more than one classloader by class name, please specify classloader with '-c <classloader hash>'");
                 return;
             } else {
-                process.end(-1, "Can not find classloader by class name: " + classLoaderClass + ".");
+                process.end(CODE_ERROR, "Can not find classloader by class name: " + classLoaderClass + ".");
                 return;
             }
         }
 
         if (urlClasses) {
             if (!classLoaderSpecified) {
-                process.end(-1, "Please specify classloader with '-c <classloader hash>' or '--classLoaderClass <classloader class name>' for --url-classes.");
+                process.end(CODE_ERROR, "Please specify classloader with '-c <classloader hash>' or '--classLoaderClass <classloader class name>' for --url-classes.");
                 return;
             }
             if (targetClassLoader == null) {
-                process.end(-1, "Can not find classloader by hashcode: " + hashCode + ".");
+                process.end(CODE_ERROR, "Can not find classloader by hashcode: " + hashCode + ".");
                 return;
             }
             processUrlClasses(process, inst, targetClassLoader);
@@ -288,7 +293,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         sorted.putAll(classLoaderStats);
         process.appendResult(new ClassLoaderModel().setClassLoaderStats(sorted));
 
-        affect.rCnt(sorted.keySet().size());
+        affect.addRowCount(sorted.keySet().size());
         process.appendResult(new RowAffectModel(affect));
         process.end();
     }
@@ -309,7 +314,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         }
         process.appendResult(new ClassLoaderModel().setClassLoaders(classLoaderVOs).setTree(isTree));
 
-        affect.rCnt(classLoaderInfos.size());
+        affect.addRowCount(classLoaderInfos.size());
         process.appendResult(new RowAffectModel(affect));
         process.end();
     }
@@ -320,12 +325,12 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         if (targetClassLoader != null) {
             URL[] classLoaderUrls = ClassLoaderUtils.getUrls(targetClassLoader);
             if (classLoaderUrls != null) {
-                affect.rCnt(classLoaderUrls.length);
+                affect.addRowCount(classLoaderUrls.length);
                 if (classLoaderUrls.length == 0) {
                     process.appendResult(new MessageModel("urls is empty."));
                 } else {
                     process.appendResult(new ClassLoaderModel().setUrls(StringUtils.toStringList(classLoaderUrls)));
-                    affect.rCnt(classLoaderUrls.length);
+                    affect.addRowCount(classLoaderUrls.length);
                 }
             } else {
                 process.appendResult(new MessageModel("not a URLClassLoader."));
@@ -352,7 +357,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
                 logger.warn("get resource failed, resource: {}", resource, e);
             }
         }
-        affect.rCnt(rowCount);
+        affect.addRowCount(rowCount);
 
         process.appendResult(new ClassLoaderModel().setResources(resources));
         process.appendResult(new RowAffectModel(affect));
@@ -363,14 +368,14 @@ public class ClassLoaderCommand extends AnnotatedCommand {
     private void processLoadClass(CommandProcess process, Instrumentation inst, ClassLoader targetClassLoader) {
         if (targetClassLoader != null) {
             try {
-                Class<?> clazz = targetClassLoader.loadClass(this.loadClass);
+                Class<?> resultClass = targetClassLoader.loadClass(this.loadClass);
                 process.appendResult(new MessageModel("load class success."));
-                ClassDetailVO classInfo = ClassUtils.createClassInfo(clazz, false, null);
+                ClassDetailVO classInfo = ClassUtils.createClassInfo(resultClass, false, null);
                 process.appendResult(new ClassLoaderModel().setLoadClass(classInfo));
 
             } catch (Throwable e) {
                 logger.warn("load class error, class: {}", this.loadClass, e);
-                process.end(-1, "load class error, class: "+this.loadClass+", error: "+e.toString());
+                process.end(CODE_ERROR, "load class error, class: "+this.loadClass+", error: "+e.toString());
                 return;
             }
         }
@@ -395,7 +400,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
      */
     @SuppressWarnings("rawtypes")
     private void getAllClasses(String hashCode, Instrumentation inst, RowAffect affect, CommandProcess process) {
-        int hashCodeInt = -1;
+        int hashCodeInt = CODE_ERROR;
         if (hashCode != null) {
             hashCodeInt = Integer.valueOf(hashCode, 16);
         }
@@ -409,12 +414,12 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
         Class[] allLoadedClasses = inst.getAllLoadedClasses();
         Map<ClassLoader, SortedSet<Class<?>>> classLoaderClassMap = new HashMap<ClassLoader, SortedSet<Class<?>>>();
-        for (Class clazz : allLoadedClasses) {
-            ClassLoader classLoader = clazz.getClassLoader();
+        for (Class loadedClass : allLoadedClasses) {
+            ClassLoader classLoader = loadedClass.getClassLoader();
             // Class loaded by BootstrapClassLoader
             if (classLoader == null) {
                 if (hashCode == null) {
-                    bootstrapClassSet.add(clazz);
+                    bootstrapClassSet.add(loadedClass);
                 }
                 continue;
             }
@@ -425,19 +430,14 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
             SortedSet<Class<?>> classSet = classLoaderClassMap.get(classLoader);
             if (classSet == null) {
-                classSet = new TreeSet<Class<?>>(new Comparator<Class<?>>() { // code inutile a revoir FIXMETAHA
-                    @Override
-                    public int compare(Class<?> o1, Class<?> o2) {
-                        return o1.getName().compareTo(o2.getName());
-                    }
-                });
+                classSet = new TreeSet<>(Comparator.comparing(Class::getName));
                 classLoaderClassMap.put(classLoader, classSet);
             }
-            classSet.add(clazz);
+            classSet.add(loadedClass);
         }
 
         // output bootstrapClassSet
-        int pageSize = 256; // MAGIC NUM FIXMETAHA
+        int pageSize = PAGE_SIZE;
         processClassSet(process, ClassUtils.createClassLoaderVO(null), bootstrapClassSet, pageSize, affect);
 
         // output other classSet
@@ -453,13 +453,10 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
     private void processClassSet(final CommandProcess process, final ClassLoaderVO classLoaderVO, Collection<Class<?>> classes, int pageSize, final RowAffect affect) {
         //分批输出classNames, Ctrl+C可以中断执行
-        ResultUtils.processClassNames(classes, pageSize, new ResultUtils.PaginationHandler<List<String>>() {
-            @Override
-            public boolean handle(List<String> classNames, int segment) {
-                process.appendResult(new ClassLoaderModel().setClassSet(new ClassSetVO(classLoaderVO, classNames, segment)));
-                affect.rCnt(classNames.size());
-                return !checkInterrupted(process);
-            }
+        ResultUtils.processClassNames(classes, pageSize, (classNames, segment) -> {
+            process.appendResult(new ClassLoaderModel().setClassSet(new ClassSetVO(classLoaderVO, classNames, segment)));
+            affect.addRowCount(classNames.size());
+            return !checkInterrupted(process);
         });
     }
 
@@ -468,7 +465,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
             return true;
         }
         if(isInterrupted){
-            process.end(-1, "Processing has been interrupted");
+            process.end(CODE_ERROR, "Processing has been interrupted");
             return true;
         } else {
             return false;
@@ -477,11 +474,11 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
     private void processUrlClasses(CommandProcess process, Instrumentation inst, ClassLoader targetClassLoader) {
         if (!urlClassesDetail && urlClassesLimit != DEFAULT_URL_CLASSES_LIMIT) {
-            process.end(-1, "Option -n/--limit only works with --url-classes -d.");
+            process.end(CODE_ERROR, "Option -n/--limit only works with --url-classes -d.");
             return;
         }
         if (urlClassesDetail && urlClassesLimit <= 0) {
-            process.end(-1, "Option -n/--limit must be greater than 0.");
+            process.end(CODE_ERROR, "Option -n/--limit must be greater than 0.");
             return;
         }
 
@@ -496,26 +493,26 @@ public class ClassLoaderCommand extends AnnotatedCommand {
                     classPattern = Pattern.compile(classFilter);
                 }
             } catch (Throwable e) {
-                process.end(-1, "Regex compile error: " + e.getMessage());
+                process.end(CODE_ERROR, "Regex compile error: " + e.getMessage());
                 return;
             }
         }
 
-        Map<String, UrlClassStatBuilder> statsMap = new HashMap<String, UrlClassStatBuilder>();
+        Map<String, UrlClassStatBuilder> statsMap = new HashMap<>();
         Class<?>[] allLoadedClasses = inst.getAllLoadedClasses();
         for (int i = 0; i < allLoadedClasses.length; i++) {
-            if ((i & 0x3FFF) == 0 && checkInterrupted(process)) { // MAGIC NUM FIXMETAHA
+            if ((i & INTERRUPT_CHECK_INTERVAL) == 0 && checkInterrupted(process)) {
                 return;
             }
-            Class<?> clazz = allLoadedClasses[i]; //FIXMETAHA
-            if (clazz == null) {
+            Class<?> loadedClass = allLoadedClasses[i];
+            if (loadedClass == null) {
                 continue;
             }
-            if (clazz.getClassLoader() != targetClassLoader) {
+            if (loadedClass.getClassLoader() != targetClassLoader) {
                 continue;
             }
 
-            String url = codeSourceLocation(clazz);
+            String url = codeSourceLocation(loadedClass);
             if (!matchJarFilter(url, jarPattern)) {
                 continue;
             }
@@ -528,12 +525,12 @@ public class ClassLoaderCommand extends AnnotatedCommand {
             builder.increaseLoadedCount();
 
             if (classFilter != null) {
-                if (matchClassFilter(clazz.getName(), classPattern)) {
+                if (matchClassFilter(loadedClass.getName(), classPattern)) {
                     builder.increaseMatchedCount();
-                    builder.tryAddClass(clazz.getName());
+                    builder.tryAddClass(loadedClass.getName());
                 }
             } else {
-                builder.tryAddClass(clazz.getName());
+                builder.tryAddClass(loadedClass.getName());
             }
         }
 
@@ -560,7 +557,7 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         });
 
         RowAffect affect = new RowAffect();
-        affect.rCnt(stats.size());
+        affect.addRowCount(stats.size());
         ClassLoaderModel model = new ClassLoaderModel()
                 .setClassLoader(ClassUtils.createClassLoaderVO(targetClassLoader))
                 .setUrlClassStats(stats)
@@ -602,9 +599,9 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         return text.toLowerCase().contains(keyword.toLowerCase());
     }
 
-    private static String codeSourceLocation(Class<?> clazz) {
+    private static String codeSourceLocation(Class<?> targetClass) {
         try {
-            ProtectionDomain protectionDomain = clazz.getProtectionDomain();
+            ProtectionDomain protectionDomain = targetClass.getProtectionDomain();
             if (protectionDomain == null) {
                 return UNKNOWN_CODE_SOURCE;
             }
@@ -644,10 +641,10 @@ public class ClassLoaderCommand extends AnnotatedCommand {
     private Map<ClassLoaderVO, ClassLoaderUrlStat> urlStats(Instrumentation inst) {
         Map<ClassLoaderVO, ClassLoaderUrlStat> urlStats = new HashMap<ClassLoaderVO, ClassLoaderUrlStat>();
         Map<ClassLoader, Set<String>> usedUrlsMap = new HashMap<ClassLoader, Set<String>>();
-        for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            ClassLoader classLoader = clazz.getClassLoader();
+        for (Class<?> loadedClass : inst.getAllLoadedClasses()) {
+            ClassLoader classLoader = loadedClass.getClassLoader();
             if (classLoader != null) {
-                ProtectionDomain protectionDomain = clazz.getProtectionDomain();
+                ProtectionDomain protectionDomain = loadedClass.getProtectionDomain();
                 CodeSource codeSource = protectionDomain.getCodeSource();
                 if (codeSource != null) {
                     URL location = codeSource.getLocation();
@@ -715,10 +712,10 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
 
     private static Set<ClassLoader> getAllClassLoaders(Instrumentation inst, Filter... filters) {
-        Set<ClassLoader> classLoaderSet = new HashSet<ClassLoader>();
+        Set<ClassLoader> classLoaderSet = new HashSet<>();
 
-        for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            ClassLoader classLoader = clazz.getClassLoader();
+        for (Class<?> loadedClass : inst.getAllLoadedClasses()) {
+            ClassLoader classLoader = loadedClass.getClassLoader();
             if (classLoader != null) {
                 if (shouldInclude(classLoader, filters)) {
                     classLoaderSet.add(classLoader);
@@ -734,8 +731,8 @@ public class ClassLoaderCommand extends AnnotatedCommand {
 
         Map<ClassLoader, ClassLoaderInfo> loaderInfos = new HashMap<ClassLoader, ClassLoaderInfo>();
 
-        for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            ClassLoader classLoader = clazz.getClassLoader();
+        for (Class<?> loadedClass : inst.getAllLoadedClasses()) {
+            ClassLoader classLoader = loadedClass.getClassLoader();
             if (classLoader == null) {
                 bootstrapInfo.increase();
             } else {
@@ -845,13 +842,13 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         @Override
         public int compareTo(ClassLoaderInfo other) {
             if (other == null) {
-                return -1;
+                return CODE_ERROR;
             }
             if (other.classLoader == null) {
-                return -1;
+                return CODE_ERROR;
             }
             if (this.classLoader == null) {
-                return -1;
+                return CODE_ERROR;
             }
 
             return this.classLoader.getClass().getName().compareTo(other.classLoader.getClass().getName());
@@ -1039,13 +1036,13 @@ public class ClassLoaderCommand extends AnnotatedCommand {
         @Override
         public int compare(String o1, String o2) {
             if (null == unsortedStats) {
-                return -1;
+                return CODE_ERROR;
             }
             if (!unsortedStats.containsKey(o1)) {
                 return 1;
             }
             if (!unsortedStats.containsKey(o2)) {
-                return -1;
+                return CODE_ERROR;
             }
             return unsortedStats.get(o2).getLoadedCount() - unsortedStats.get(o1).getLoadedCount();
         }

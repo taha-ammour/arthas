@@ -142,7 +142,7 @@ public class SearchMethodCommand extends AnnotatedCommand {
 
                     MethodVO methodInfo = ClassUtils.createMethodInfo(constructor, clazz, isDetail);
                     process.appendResult(new SearchMethodModel(methodInfo, isDetail));
-                    affect.rCnt(1);
+                    affect.addRowCount(1);
                 }
 
                 for (Method method : clazz.getDeclaredMethods()) {
@@ -151,7 +151,7 @@ public class SearchMethodCommand extends AnnotatedCommand {
                     }
                     MethodVO methodInfo = ClassUtils.createMethodInfo(method, clazz, isDetail);
                     process.appendResult(new SearchMethodModel(methodInfo, isDetail));
-                    affect.rCnt(1);
+                    affect.addRowCount(1);
                 }
             } catch (Error e) {
                 //print failed className

@@ -168,7 +168,7 @@ public class SearchClassCommand extends AnnotatedCommand {
             });
         }
 
-        affect.rCnt(matchedClasses.size());
+        affect.addRowCount(matchedClasses.size());
         process.appendResult(new RowAffectModel(affect));
         process.end();
     }

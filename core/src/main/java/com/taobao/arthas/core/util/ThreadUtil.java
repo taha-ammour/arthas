@@ -235,7 +235,7 @@ abstract public class ThreadUtil {
                     sb.append("\t-  locked ").append(mi);
                     if (mi.getIdentityHashCode() == lockIdentityHashCode) {
                         Ansi highlighted = Ansi.ansi().fg(Ansi.Color.RED);
-                        highlighted.a(" <---- but blocks ").a(blockingThreadCount).a(" other threads!");
+                        highlighted.applyAttribute(" <---- but blocks ").applyAttribute(blockingThreadCount).applyAttribute(" other threads!");
                         sb.append(highlighted.reset().toString());
                     }
                     sb.append('\n');
@@ -335,7 +335,7 @@ abstract public class ThreadUtil {
                     sb.append("\t-  locked ").append(mi);
                     if (mi.getIdentityHashCode() == lockIdentityHashCode) {
                         Ansi highlighted = Ansi.ansi().fg(Ansi.Color.RED);
-                        highlighted.a(" <---- but blocks ").a(blockingThreadCount).a(" other threads!");
+                        highlighted.applyAttribute(" <---- but blocks ").applyAttribute(blockingThreadCount).applyAttribute(" other threads!");
                         sb.append(highlighted.reset().toString());
                     }
                     sb.append('\n');

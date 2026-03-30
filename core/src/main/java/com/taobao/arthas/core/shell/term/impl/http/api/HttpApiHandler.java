@@ -594,6 +594,9 @@ public class HttpApiHandler {
 
     private static class ApiTerm implements Term {
 
+        public static final int DEFAULT_WIDTH = 1000;
+        public static final int DEFAULT_HEIGHT = 200;
+
         private Session session;
 
         public ApiTerm(Session session) {
@@ -612,12 +615,12 @@ public class HttpApiHandler {
 
         @Override
         public int width() {
-            return 1000;
+            return DEFAULT_WIDTH;
         }
 
         @Override
         public int height() {
-            return 200;
+            return DEFAULT_HEIGHT;
         }
 
         @Override

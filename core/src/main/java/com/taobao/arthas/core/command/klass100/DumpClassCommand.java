@@ -158,7 +158,7 @@ public class DumpClassCommand extends AnnotatedCommand {
             }
             process.appendResult(new DumpClassModel().setDumpedClasses(dumpedClasses));
 
-            effect.rCnt(classFiles.keySet().size());
+            effect.addRowCount(classFiles.keySet().size());
             return ExitStatus.success();
         } catch (Throwable t) {
             logger.error("dump: fail to dump classes: " + matchedClasses, t);

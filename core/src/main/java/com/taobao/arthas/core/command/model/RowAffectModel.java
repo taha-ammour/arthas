@@ -21,7 +21,7 @@ public class RowAffectModel extends ResultModel {
     }
 
     public int getRowCount() {
-        return affect.rCnt();
+        return affect.getRowCount();
     }
 
     public RowAffect affect() {

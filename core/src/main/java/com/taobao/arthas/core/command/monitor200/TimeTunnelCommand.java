@@ -345,7 +345,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
                     .setExpand(expand)
                     .setSizeLimit(sizeLimit);
             process.appendResult(timeTunnelModel);
-            affect.rCnt(1);
+            affect.addRowCount(1);
             process.appendResult(new RowAffectModel(affect));
             process.end();
         } catch (Throwable e) {
@@ -373,7 +373,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
                     .setSizeLimit(sizeLimit);
             process.appendResult(timeTunnelModel);
 
-            affect.rCnt(1);
+            affect.addRowCount(1);
             process.appendResult(new RowAffectModel(affect));
             process.end();
         } catch (ExpressException e) {
@@ -418,7 +418,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
                 process.appendResult(new TimeTunnelModel().setTimeFragmentList(timeFragmentList).setFirst(true));
             }
 
-            affect.rCnt(matchingTimeSegmentMap.size());
+            affect.addRowCount(matchingTimeSegmentMap.size());
             process.appendResult(new RowAffectModel(affect));
             process.end();
         } catch (ExpressException e) {
@@ -431,7 +431,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
     private void processDelete(CommandProcess process) {
         RowAffect affect = new RowAffect();
         if (timeFragmentMap.remove(index) != null) {
-            affect.rCnt(1);
+            affect.addRowCount(1);
         }
         process.appendResult(new MessageModel(format("Time fragment[%d] successfully deleted.", index)));
         process.appendResult(new RowAffectModel(affect));
@@ -451,7 +451,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
         RowAffect affect = new RowAffect();
         List<TimeFragmentVO> timeFragmentList = createTimeTunnelVOList(timeFragmentMap);
         process.appendResult(new TimeTunnelModel().setTimeFragmentList(timeFragmentList).setFirst(true));
-        affect.rCnt(timeFragmentMap.size());
+        affect.addRowCount(timeFragmentMap.size());
         process.appendResult(new RowAffectModel(affect));
         process.end();
     }

@@ -167,7 +167,7 @@ public class GetStaticCommand extends AnnotatedCommand {
 
                 process.appendResult(new GetStaticModel(field.getName(), value, expand));
 
-                affect.rCnt(1);
+                affect.addRowCount(1);
             } catch (IllegalAccessException e) {
                 logger.warn("getstatic: failed to get static value, class: {}, field: {} ", clazz, field.getName(), e);
                 process.appendResult(new MessageModel("Failed to get static, exception message: " + e.getMessage()

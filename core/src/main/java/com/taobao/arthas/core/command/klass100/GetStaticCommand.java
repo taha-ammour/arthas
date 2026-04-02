@@ -48,6 +48,7 @@ import java.util.Collection;
 public class GetStaticCommand extends AnnotatedCommand {
 
     private static final Logger logger = LoggerFactory.getLogger(GetStaticCommand.class);
+    public static final int CODE_ERROR = -1;
 
     private String classPattern;
     private String fieldPattern;
@@ -114,10 +115,10 @@ public class GetStaticCommand extends AnnotatedCommand {
                         .setClassLoaderClass(classLoaderClass)
                         .setMatchedClassLoaders(classLoaderVOList);
                 process.appendResult(getStaticModel);
-                process.end(-1, "Found more than one classloader by class name, please specify classloader with '-c <classloader hash>'");
+                process.end(CODE_ERROR, "Found more than one classloader by class name, please specify classloader with '-c <classloader hash>'");
                 return;
             } else {
-                process.end(-1, "Can not find classloader by class name: " + classLoaderClass + ".");
+                process.end(CODE_ERROR, "Can not find classloader by class name: " + classLoaderClass + ".");
                 return;
             }
         }
@@ -125,7 +126,7 @@ public class GetStaticCommand extends AnnotatedCommand {
         Set<Class<?>> matchedClasses = SearchUtils.searchClassOnly(inst, classPattern, isRegEx, hashCode);
         try {
             if (matchedClasses == null || matchedClasses.isEmpty()) {
-                process.end(-1, "No class found for: " + classPattern);
+                process.end(CODE_ERROR, "No class found for: " + classPattern);
                 return;
             }
             ExitStatus status = null;
@@ -139,7 +140,7 @@ public class GetStaticCommand extends AnnotatedCommand {
         } catch (Throwable e){
             logger.error("processing error", e);
             process.appendResult(new RowAffectModel(affect));
-            process.end(-1, "processing error");
+            process.end(CODE_ERROR, "processing error");
         }
     }
 
@@ -182,7 +183,7 @@ public class GetStaticCommand extends AnnotatedCommand {
         }
 
         if (!found) {
-            return ExitStatus.failure(-1, "getstatic: no matched static field was found");
+            return ExitStatus.failure(CODE_ERROR, "getstatic: no matched static field was found");
         } else {
             return ExitStatus.success();
         }
@@ -199,7 +200,7 @@ public class GetStaticCommand extends AnnotatedCommand {
 
         List<ClassVO> matchedClassVOs = ClassUtils.createClassVOList(matchedClasses);
         process.appendResult(new GetStaticModel(matchedClassVOs));
-        return ExitStatus.failure(-1, "Found more than one class for: " + classPattern + ", Please use: "+usage);
+        return ExitStatus.failure(CODE_ERROR, "Found more than one class for: " + classPattern + ", Please use: "+usage);
     }
 
     private Matcher<String> fieldNameMatcher() {

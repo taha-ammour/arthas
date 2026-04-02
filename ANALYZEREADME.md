@@ -197,7 +197,7 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
 ---
 
 ### 10. Migration du build Java 8 à Java 11
-
+//REFIX
 **Fichiers** : `pom.xml` (racine) et `core/pom.xml`
 
 **Situation existante** : Le projet ciblait Java 8 (`<source>8</source>`, `<target>8</target>`). Sur les JDK récents (21, 23), cela produisait le warning " source value 8 is obsolete and will be removed in a future release ". Plus important, sur les machines universitaires, les APIs internes du JDK (`com.sun.tools.attach`, `jdk.jfr`, `sun.management`) n'étaient pas accessibles, causant des erreurs de compilation fatales.

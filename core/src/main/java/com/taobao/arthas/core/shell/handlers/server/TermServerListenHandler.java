@@ -35,14 +35,14 @@ public class TermServerListenHandler implements Handler<Future<TermServer>> {
 
         if (count.decrementAndGet() == 0) {
             if (failed.get()) {
-                listenHandler.handle(Future.<Void>failedFuture(ar.cause()));
+                listenHandler.handle(Future.failedFuture(ar.cause()));
                 for (TermServer termServer : toStart) {
                     termServer.close();
                 }
             } else {
                 shellServer.setClosed(false);
                 shellServer.setTimer();
-                listenHandler.handle(Future.<Void>succeededFuture());
+                listenHandler.handle(Future.succeededFuture());
             }
         }
     }

@@ -113,6 +113,52 @@ public class HttpApiHandler {
         }
     }
 
+    private Session resolveOrCreateSession(ChannelHandlerContext ctx, ApiRequest apiRequest, ApiAction action) throws ApiException {
+        Session session = null;
+        boolean allowNullSession = ApiAction.EXEC.equals(action);
+        String sessionId = apiRequest.getSessionId();
+
+        if (StringUtils.isBlank(sessionId)) {
+            if (!allowNullSession) {
+                throw new ApiException("'sessionId' is required");
+            }
+        } else {
+            session = sessionManager.getSession(sessionId);
+            if (session == null) {
+                throw new ApiException("session not found: " + sessionId);
+            }
+            sessionManager.updateAccessTime(session);
+        }
+
+        if (session == null) {
+            session = sessionManager.createSession();
+            session.put(ONETIME_SESSION_KEY, new Object());
+        }
+
+        applyHttpSessionAttributes(ctx, session);
+
+        if (!StringUtils.isBlank(apiRequest.getUserId())) {
+            session.setUserId(apiRequest.getUserId());
+        }
+
+        return session;
+    }
+
+    private void applyHttpSessionAttributes(ChannelHandlerContext ctx, Session session) {
+        HttpSession httpSession = HttpSessionManager.getHttpSessionFromContext(ctx);
+        if (httpSession == null) {
+            return;
+        }
+        Object subject = httpSession.getAttribute(ArthasConstants.SUBJECT_KEY);
+        if (subject != null) {
+            session.put(ArthasConstants.SUBJECT_KEY, subject);
+        }
+        Object userId = httpSession.getAttribute(ArthasConstants.USER_ID_KEY);
+        if (userId != null && session.getUserId() == null) {
+            session.setUserId((String) userId);
+        }
+    }
+
     private ApiResponse processRequest(ChannelHandlerContext ctx, ApiRequest apiRequest) {
 
         String actionStr = apiRequest.getAction();
@@ -132,47 +178,7 @@ public class HttpApiHandler {
                 return processInitSessionRequest(apiRequest);
             }
 
-            //required session
-            Session session = null;
-            boolean allowNullSession = ApiAction.EXEC.equals(action);
-            String sessionId = apiRequest.getSessionId();
-            if (StringUtils.isBlank(sessionId)) {
-                if (!allowNullSession) {
-                    throw new ApiException("'sessionId' is required");
-                }
-            } else {
-                session = sessionManager.getSession(sessionId);
-                if (session == null) {
-                    throw new ApiException("session not found: " + sessionId);
-                }
-                sessionManager.updateAccessTime(session);
-            }
-
-            // 标记所谓的一次性session
-            if (session == null) {
-                session = sessionManager.createSession();
-                session.put(ONETIME_SESSION_KEY, new Object());
-            }
-
-            // 请求到达这里，如果有需要鉴权，则已经在前面的handler里处理过了
-            // 如果有鉴权取到的 Subject，则传递到 arthas的session里
-            HttpSession httpSession = HttpSessionManager.getHttpSessionFromContext(ctx);
-            if (httpSession != null) {
-                Object subject = httpSession.getAttribute(ArthasConstants.SUBJECT_KEY);
-                if (subject != null) {
-                    session.put(ArthasConstants.SUBJECT_KEY, subject);
-                }
-                // get userId from httpSession
-                Object userId = httpSession.getAttribute(ArthasConstants.USER_ID_KEY);
-                if (userId != null && session.getUserId() == null) {
-                    session.setUserId((String) userId);
-                }
-            }
-
-            // set userId from apiRequest if provided
-            if (!StringUtils.isBlank(apiRequest.getUserId())) {
-                session.setUserId(apiRequest.getUserId());
-            }
+            Session session = resolveOrCreateSession(ctx, apiRequest, action);
 
             //dispatch requests
             ApiResponse response = dispatchRequest(action, apiRequest, session);

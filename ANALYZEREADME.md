@@ -198,23 +198,17 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
 
 ### 10. Migration du build Java 8 à Java 11
 
-**Fichiers** : `pom.xml` (racine) et `core/pom.xml`
+**Fichiers** : `core/pom.xml`
 
-**Situation existante** : Le projet ciblait Java 8 (`<source>8</source>`, `<target>8</target>`). Sur les JDK récents (21, 23), cela produisait le warning " source value 8 is obsolete and will be removed in a future release ". Plus important, sur les machines universitaires, les APIs internes du JDK (`com.sun.tools.attach`, `jdk.jfr`, `sun.management`) n'étaient pas accessibles, causant des erreurs de compilation fatales.
-
-**Modification apportée dans pom.xml (racine)** :
-- `<maven.compiler.source>1.8</maven.compiler.source>` à `11`
-- `<maven.compiler.target>1.8</maven.compiler.target>` à `11`
-- Plugin `maven-compiler-plugin` : `<source>8</source>` à `11`
-- Plugin `maven-javadoc-plugin` : `<source>1.8</source>` à `11`
+**Situation existante** : Le projet ciblait Java 8 (`<source>8</source>`, `<target>8</target>`). Sur les JDK récents (11+), le système de modules JPMS empêche l'accès aux APIs internes du JDK (`com.sun.tools.attach`, `jdk.jfr`, `sun.management`), causant des erreurs de compilation fatales. Il fallait ajouter des flags `--add-modules` et `--add-exports`, mais ces flags n'existent pas en Java 8 et provoquent une erreur : " option --add-modules not allowed with target 8 ".
 
 **Modification apportée dans core/pom.xml** :
-- Ajout de `--add-modules jdk.attach,jdk.jfr` pour rendre visibles les modules JDK nécessaires
-- Ajout de `--add-exports` pour `sun.management`, `sun.management.counter`, `sun.management.counter.perf`
-- Ajout du plugin `maven-surefire-plugin` avec les mêmes flags pour les tests
+- Les flags JPMS (`--add-modules`, `--add-exports`, `--add-opens`) ont été placés dans un profil Maven `jdk11-plus` qui ne s'active que sur JDK 11 et supérieur via `<activation><jdk>[11,)</jdk></activation>`
+- Le profil surcharge `<source>` et `<target>` à `11` et désactive le flag `--release` (qui bloquerait `--add-exports`) via `<release combine.self="override"/>`
+- Le `maven-surefire-plugin` reçoit les mêmes flags JPMS dans le profil pour que les tests accèdent aux modules internes
 - Suppression de la dépendance obsolète `maven-jdk-tools-wrapper` (inutile en Java 11+)
 
-**En quoi c'est mieux** : Le build compile et tous les 173 tests passent sur JDK 11, 21 et 23. Le warning " source value 8 is obsolete " disparaît. Le projet est prêt pour les JDK modernes tout en conservant sa compatibilité avec les APIs internes nécessaires au fonctionnement d'Arthas (outil de diagnostic JVM).
+**En quoi c'est mieux** : Le build fonctionne sur Java 8 ET Java 11+ sans aucune modification manuelle. Maven détecte automatiquement la version du JDK et active le profil si nécessaire. Le CI GitHub Actions (qui teste sur JDK 8, 11, 17, 21 et 25) passe sur toutes les versions. Le projet conserve la compatibilité descendante avec Java 8 tout en supportant le système de modules JPMS sur les JDK modernes.
 
 ---
 
@@ -247,12 +241,18 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
 ## Comment compiler et exécuter
 
 ### Prérequis
-- JDK 11 ou supérieur (testé avec JDK 21 et JDK 23)
+- JDK 8 ou supérieur (testé avec JDK 8, 11, 21 et 23)
 - Maven installé
 - JAVA_HOME configuré
 
 ### Compiler le projet
-    mvn clean install -DskipTests -pl !arthas-vmtool
+
+    Windows :
+        mvn clean install -DskipTests -pl !arthas-vmtool
+
+    Linux / macOS :
+        mvn clean install -DskipTests -pl '!arthas-vmtool'
+
     Résultat attendu : BUILD SUCCESS (22/22 modules)
 
 ### Exécuter les tests
@@ -260,11 +260,22 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
     Résultat attendu : Tests run: 173, Failures: 0, Errors: 0, Skipped: 7
 
 ### Lancer Arthas (build local)
-    TERMINAL 1 :
-        java -jar math-game\target\math-game.jar
 
-    TERMINAL 2 :
-        java -jar boot\target\arthas-boot-jar-with-dependencies.jar --arthas-home packaging\target\arthas-bin
+    TERMINAL 1 — Lancer l'application de démo :
+
+        Windows :
+            java -jar math-game\target\math-game.jar
+
+        Linux / macOS :
+            java -jar math-game/target/math-game.jar
+
+    TERMINAL 2 — Lancer Arthas (build local) :
+
+        Windows :
+            java -jar boot\target\arthas-boot-jar-with-dependencies.jar --arthas-home packaging\target\arthas-bin
+
+        Linux / macOS :
+            java -jar boot/target/arthas-boot-jar-with-dependencies.jar --arthas-home packaging/target/arthas-bin
 
     Sélectionner le processus math-game (ex: taper 1).
     Vérifier que la bannière affiche "version 4.1.5" (build local).

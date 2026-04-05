@@ -102,39 +102,55 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArgs>
-                        <arg>--add-modules</arg>
-                        <arg>jdk.attach,jdk.jfr</arg>
-                        <arg>--add-exports</arg>
-                        <arg>java.management/sun.management.counter=ALL-UNNAMED</arg>
-                        <arg>--add-exports</arg>
-                        <arg>java.management/sun.management.counter.perf=ALL-UNNAMED</arg>
-                        <arg>--add-exports</arg>
-                        <arg>java.management/sun.management=ALL-UNNAMED</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>
-                        --add-modules jdk.attach,jdk.jfr
-                        --add-exports java.management/sun.management=ALL-UNNAMED
-                        --add-exports jdk.internal.jvmstat/sun.management.counter=ALL-UNNAMED
-                        --add-exports jdk.internal.jvmstat/sun.management.counter.perf=ALL-UNNAMED
-                        --add-opens java.base/java.lang=ALL-UNNAMED
-                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
-                        --add-opens java.base/sun.misc=ALL-UNNAMED
-                    </argLine>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jdk11-plus</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <release combine.self="override"/>
+                            <source>11</source>
+                            <target>11</target>
+                            <compilerArgs>
+                                <arg>--add-modules</arg>
+                                <arg>jdk.attach,jdk.jfr</arg>
+                                <arg>--add-exports</arg>
+                                <arg>java.management/sun.management.counter=ALL-UNNAMED</arg>
+                                <arg>--add-exports</arg>
+                                <arg>java.management/sun.management.counter.perf=ALL-UNNAMED</arg>
+                                <arg>--add-exports</arg>
+                                <arg>java.management/sun.management=ALL-UNNAMED</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>
+                                --add-modules jdk.attach,jdk.jfr
+                                --add-exports java.management/sun.management=ALL-UNNAMED
+                                --add-exports jdk.internal.jvmstat/sun.management.counter=ALL-UNNAMED
+                                --add-exports jdk.internal.jvmstat/sun.management.counter.perf=ALL-UNNAMED
+                                --add-opens java.base/java.lang=ALL-UNNAMED
+                                --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                                --add-opens java.base/sun.misc=ALL-UNNAMED
+                            </argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>

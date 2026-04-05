@@ -198,7 +198,7 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
 
 ### 10. Migration du build Java 8 à Java 11
 
-**Fichiers** : `core/pom.xml`
+**Fichiers** : `pom.xml` (racine) et `core/pom.xml`
 
 **Situation existante** : Le projet ciblait Java 8 (`<source>8</source>`, `<target>8</target>`). Sur les JDK récents (11+), le système de modules JPMS empêche l'accès aux APIs internes du JDK (`com.sun.tools.attach`, `jdk.jfr`, `sun.management`), causant des erreurs de compilation fatales. Il fallait ajouter des flags `--add-modules` et `--add-exports`, mais ces flags n'existent pas en Java 8 et provoquent une erreur : " option --add-modules not allowed with target 8 ".
 
@@ -241,18 +241,12 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
 ## Comment compiler et exécuter
 
 ### Prérequis
-- JDK 8 ou supérieur (testé avec JDK 8, 11, 21 et 23)
+- JDK 11 ou supérieur (testé avec JDK 21 et JDK 23)
 - Maven installé
 - JAVA_HOME configuré
 
 ### Compiler le projet
-
-    Windows :
-        mvn clean install -DskipTests -pl !arthas-vmtool
-
-    Linux / macOS :
-        mvn clean install -DskipTests -pl '!arthas-vmtool'
-
+    mvn clean install -DskipTests -pl !arthas-vmtool
     Résultat attendu : BUILD SUCCESS (22/22 modules)
 
 ### Exécuter les tests
@@ -260,22 +254,11 @@ Le constructeur `RowAffect(int rCnt)` à `RowAffect(int initialCount)`.
     Résultat attendu : Tests run: 173, Failures: 0, Errors: 0, Skipped: 7
 
 ### Lancer Arthas (build local)
+    TERMINAL 1 :
+        java -jar math-game\target\math-game.jar
 
-    TERMINAL 1 — Lancer l'application de démo :
-
-        Windows :
-            java -jar math-game\target\math-game.jar
-
-        Linux / macOS :
-            java -jar math-game/target/math-game.jar
-
-    TERMINAL 2 — Lancer Arthas (build local) :
-
-        Windows :
-            java -jar boot\target\arthas-boot-jar-with-dependencies.jar --arthas-home packaging\target\arthas-bin
-
-        Linux / macOS :
-            java -jar boot/target/arthas-boot-jar-with-dependencies.jar --arthas-home packaging/target/arthas-bin
+    TERMINAL 2 :
+        java -jar boot\target\arthas-boot-jar-with-dependencies.jar --arthas-home packaging\target\arthas-bin
 
     Sélectionner le processus math-game (ex: taper 1).
     Vérifier que la bannière affiche "version 4.1.5" (build local).

@@ -63,8 +63,8 @@ public class MethodInfoView implements View {
         final StringBuilder paramsSB = new StringBuilder();
         final Class<?>[] paramTypes = method.getParameterTypes();
         if (paramTypes.length > 0) {
-            for (Class<?> clazz : paramTypes) {
-                paramsSB.append(StringUtils.classname(clazz)).append("\n");
+            for (Class<?> paramTypeClass : paramTypes) {
+                paramsSB.append(StringUtils.classname(paramTypeClass)).append("\n");
             }
         }
         return paramsSB.toString();
@@ -81,8 +81,8 @@ public class MethodInfoView implements View {
         final StringBuilder exceptionSB = new StringBuilder();
         final Class<?>[] exceptionTypes = method.getExceptionTypes();
         if (exceptionTypes.length > 0) {
-            for (Class<?> clazz : exceptionTypes) {
-                exceptionSB.append(StringUtils.classname(clazz)).append("\n");
+            for (Class<?> exceptionClass : exceptionTypes) {
+                exceptionSB.append(StringUtils.classname(exceptionClass)).append("\n");
             }
         }
         return exceptionSB.toString();

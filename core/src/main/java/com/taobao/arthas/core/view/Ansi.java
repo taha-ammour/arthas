@@ -14,7 +14,7 @@ public class Ansi {
     private static final char FIRST_ESC_CHAR = 27;
     private static final char SECOND_ESC_CHAR = '[';
 
-    public static enum Color {
+    public enum Color {
         BLACK(0, "BLACK"),
         RED(1, "RED"),
         GREEN(2, "GREEN"),
@@ -59,7 +59,7 @@ public class Ansi {
         }
     }
 
-    public static enum Attribute {
+    public enum Attribute {
         RESET(0, "RESET"),
         INTENSITY_BOLD(1, "INTENSITY_BOLD"),
         INTENSITY_FAINT(2, "INTENSITY_FAINT"),
@@ -98,7 +98,7 @@ public class Ansi {
 
     }
 
-    public static enum Erase {
+    public enum Erase {
         FORWARD(0, "FORWARD"),
         BACKWARD(1, "BACKWARD"),
         ALL(2, "ALL");
@@ -618,25 +618,7 @@ public class Ansi {
         return this;
     }
 
-    public Ansi applyAttribute(float value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(int value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(long value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(Object value) {
+    public <T> Ansi applyAttribute(T value) {
         flushAttributes();
         builder.append(value);
         return this;

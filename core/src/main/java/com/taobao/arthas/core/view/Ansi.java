@@ -308,12 +308,6 @@ public class Ansi {
         }
 
         @Override
-        @Deprecated
-        public Ansi restorCursorPosition() {
-            return this;
-        }
-
-        @Override
         public Ansi restoreCursorPosition() {
             return this;
         }
@@ -549,11 +543,6 @@ public class Ansi {
         return appendEscapeSequence('s');
     }
 
-    @Deprecated
-    public Ansi restorCursorPosition() {
-        return appendEscapeSequence('u');
-    }
-
     public Ansi restoreCursorPosition() {
         return appendEscapeSequence('u');
     }
@@ -568,24 +557,6 @@ public class Ansi {
 
     public Ansi boldOff() {
         return applyAttribute(Attribute.INTENSITY_BOLD_OFF);
-    }
-
-    public Ansi applyAttribute(String value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(boolean value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(char value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
     }
 
     public Ansi applyAttribute(char[] value, int offset, int len) {
@@ -606,25 +577,7 @@ public class Ansi {
         return this;
     }
 
-    public Ansi applyAttribute(CharSequence value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(double value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
     public <T> Ansi applyAttribute(T value) {
-        flushAttributes();
-        builder.append(value);
-        return this;
-    }
-
-    public Ansi applyAttribute(StringBuffer value) {
         flushAttributes();
         builder.append(value);
         return this;
